@@ -15,8 +15,8 @@ type postKey string
 const postCtx postKey = "post"
 
 type UpdatePostPayload struct {
-	Title   string `json:"title omitemtpy,max=100"`
-	Content string `json:"content omitempty,max=1000"`
+	Title   *string `json:"title" validate:"omitemtpy,max=100"`
+	Content *string `json:"content" validate:"omitempty,max=1000"`
 }
 
 type CreatePostPayload struct {
@@ -52,7 +52,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := writeJSON(w, http.StatusCreated, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, post); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -69,7 +69,7 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	post.Comments = comments
 
-	if err := writeJSON(w, http.StatusOK, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
@@ -105,11 +105,25 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
 	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	// check if the content is empty
+	if payload.Content != nil {
+		post.Content = *payload.Content
+	}
+
+	if payload.Title != nil {
+		post.Title = *payload.Title
+	}
+
 	if err := app.store.Posts.Update(r.Context(), post); err != nil {
 		app.internalServerError(w, r, err)
 	}
 
-	if err := writeJSON(w, http.StatusOK, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 	}
 

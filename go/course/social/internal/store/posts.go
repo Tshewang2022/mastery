@@ -99,4 +99,5 @@ func (s *PostStore) Update(ctx context.Context, post *Post) error {
 	if err != nil {
 		return err
 	}
+	return nil
 }
