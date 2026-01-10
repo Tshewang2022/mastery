@@ -7,13 +7,12 @@ import (
 	"log"
 )
 
-const version = "0.0.2"
+const version = "0.0.9"
 
 func main() {
 
-	//	@title			        social API
-	//	@version		1.0
-	//	@description	This is a sample server Petstore server.
+	//	@title			GopherSocial API
+	//	@description	API for GopherSocial, a social network for gohpers
 	//	@termsOfService	http://swagger.io/terms/
 
 	//	@contact.name	API Support
@@ -23,9 +22,8 @@ func main() {
 	//	@license.name	Apache 2.0
 	//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-	//	@host		petstore.swagger.io
-	//	@BasePath	/v1
-
+	//	@BasePath					/v1
+	//
 	//	@securityDefinitions.apikey	ApiKeyAuth
 	//	@in							header
 	//	@name						Authorization
