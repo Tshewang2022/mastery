@@ -5,9 +5,8 @@ import (
 	"net/http"
 )
 
-// func getUserFeedHandler(req, res)=>{}
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: pagination, filters
+	// Parse and validate pagination query
 	fq := store.PaginatedFeedQuery{
 		Limit:  20,
 		Offset: 0,
@@ -27,13 +26,15 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
+	// Fetch the user's feed
 	feed, err := app.store.Posts.GetUserFeed(ctx, int64(103), fq)
-
 	if err != nil {
 		app.internalServerError(w, r, err)
+		return // <-- Missing return!
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, feed); err != nil {
 		app.internalServerError(w, r, err)
+		return
 	}
 }
