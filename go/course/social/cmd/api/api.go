@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github/Tshewang2022/social/docs"
+	"github/Tshewang2022/social/internal/auth"
 	"github/Tshewang2022/social/internal/mailer"
 	"github/Tshewang2022/social/internal/store"
 
@@ -17,10 +18,11 @@ import (
 
 // automating the github commit
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Aunthenticator
 }
 
 type config struct {
@@ -35,6 +37,12 @@ type config struct {
 
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
+}
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
 }
 
 type basicConfig struct {
@@ -106,6 +114,7 @@ func (app *application) mount() http.Handler {
 		// public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 
 	})
