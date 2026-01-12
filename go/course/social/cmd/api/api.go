@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// automating the github commit
 type application struct {
 	config config
 	store  store.Storage
