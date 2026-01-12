@@ -50,14 +50,13 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	user := getUserFromContext(r)
 
 	post := &store.Post{
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
-
-		// TODO: change after auth
-		UserID: 1,
+		UserID:  user.ID,
 	}
 	ctx := r.Context()
 	if err := app.store.Posts.Create(ctx, post); err != nil {
