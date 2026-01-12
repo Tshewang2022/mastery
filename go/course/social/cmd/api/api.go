@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github/Tshewang2022/social/docs"
+	"github/Tshewang2022/social/internal/mailer"
 	"github/Tshewang2022/social/internal/store"
 
 	"net/http"
@@ -18,18 +19,27 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {
-	addr   string
-	db     dbConfig
-	env    string
-	apiURL string
-	mail   mailConfig
+	addr        string
+	db          dbConfig
+	env         string
+	apiURL      string
+	mail        mailConfig
+	frontendURL string
 }
 
 type mailConfig struct {
-	exp time.Duration
+	exp       time.Duration
+	fromEmail string
+
+	sendGrid sendGridConfig
+}
+
+type sendGridConfig struct {
+	apiKey string
 }
 type dbConfig struct {
 	addr         string

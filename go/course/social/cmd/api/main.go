@@ -3,6 +3,7 @@ package main
 import (
 	"github/Tshewang2022/social/internal/db"
 	"github/Tshewang2022/social/internal/env"
+	"github/Tshewang2022/social/internal/mailer"
 	"github/Tshewang2022/social/internal/store"
 	"time"
 
@@ -31,8 +32,9 @@ func main() {
 	//	@name						Authorization
 	//	@description
 	cfg := config{
-		addr:   env.GetString("ADDR", ":8080"),
-		apiURL: env.GetString("EXTERNAL_URL", "localhost:8080"),
+		addr:        env.GetString("ADDR", ":8080"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
+		apiURL:      env.GetString("EXTERNAL_URL", "localhost:8080"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/social? sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
@@ -40,7 +42,11 @@ func main() {
 			maxIdelTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3, // user have 3 days to accpet the invitations
+			exp:       time.Hour * 24 * 3, // user have 3 days to accept the invitations
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
 		},
 		env: env.GetString("ENV", "development"),
 	}
@@ -64,10 +70,14 @@ func main() {
 	logger.Info("database connection pool established")
 
 	store := store.NewStorage(db)
+
+	mailer := mailer.NewSendGrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 	mux := app.mount()
 	logger.Fatal(app.run(mux))
