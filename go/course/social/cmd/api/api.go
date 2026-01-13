@@ -6,6 +6,7 @@ import (
 	"github/Tshewang2022/social/internal/auth"
 	"github/Tshewang2022/social/internal/mailer"
 	"github/Tshewang2022/social/internal/store"
+	"github/Tshewang2022/social/internal/store/cache"
 
 	"net/http"
 	"time"
@@ -23,6 +24,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Aunthenticator
+	cacheStorage  cache.Storage
 }
 
 type config struct {
@@ -33,6 +35,7 @@ type config struct {
 	mail        mailConfig
 	frontendURL string
 	auth        authConfig
+	redisCfg    redisConfig
 }
 
 type authConfig struct {
@@ -45,6 +48,12 @@ type tokenConfig struct {
 	iss    string
 }
 
+type redisConfig struct {
+	addr    string
+	pw      string
+	db      int
+	enabled bool
+}
 type basicConfig struct {
 	user string
 	pass string

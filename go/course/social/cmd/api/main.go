@@ -6,8 +6,10 @@ import (
 	"github/Tshewang2022/social/internal/env"
 	"github/Tshewang2022/social/internal/mailer"
 	"github/Tshewang2022/social/internal/store"
+	"github/Tshewang2022/social/internal/store/cache"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
@@ -42,6 +44,15 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdelTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
+
+		// redis db
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:/6379"),
+			pw:      env.GetString("REDIS_PW", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", false),
+		},
+
 		mail: mailConfig{
 			exp:       time.Hour * 24 * 3, // user have 3 days to accept the invitations
 			fromEmail: env.GetString("FROM_EMAIL", ""),
@@ -60,6 +71,7 @@ func main() {
 				exp:    time.Hour * 24 * 3, // 3days
 			},
 		},
+
 		env: env.GetString("ENV", "development"),
 	}
 
@@ -81,7 +93,15 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
+	// cache
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis connection pool estb")
+	}
+
 	store := store.NewStorage(db)
+	cacheStorage := cache.NewRedisStorage(rdb)
 
 	mailer := mailer.NewSendGrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 	jwtAuthenticator := auth.NewJTWAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
@@ -92,6 +112,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		cacheStorage:  cacheStorage,
 	}
 	mux := app.mount()
 	logger.Fatal(app.run(mux))
