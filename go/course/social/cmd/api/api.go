@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"expvar"
 	"fmt"
 	"github/Tshewang2022/social/docs"
 	"github/Tshewang2022/social/internal/auth"
@@ -108,7 +109,9 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout((60 * time.Second)))
 
 	r.Route("/v1", func(r chi.Router) {
+		// operational endpoint
 		r.Get("/health", app.healthCheckHandler)
+		r.Get("/server/metrics", expvar.Handler().ServeHTTP)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))

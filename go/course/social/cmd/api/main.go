@@ -1,12 +1,14 @@
 package main
 
 import (
+	"expvar"
 	"github/Tshewang2022/social/internal/auth"
 	"github/Tshewang2022/social/internal/db"
 	"github/Tshewang2022/social/internal/env"
 	"github/Tshewang2022/social/internal/mailer"
 	"github/Tshewang2022/social/internal/store"
 	"github/Tshewang2022/social/internal/store/cache"
+	"runtime"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -114,6 +116,19 @@ func main() {
 		authenticator: jwtAuthenticator,
 		cacheStorage:  cacheStorage,
 	}
+	// metrics collected
+	expvar.NewString("version").Set(version)
+
+	//collecting the database metrics
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+
+	// no. of goroutines in the server
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}),
+	)
 	mux := app.mount()
 	logger.Fatal(app.run(mux))
 }
